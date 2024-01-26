@@ -52,10 +52,13 @@ jobs:
         run: |
           if [ "${{ steps.package-version-prev.outputs.current-version}}" == "${{ steps.package-version.outputs.current-version}}" ]; then
             echo "No new version, action cancelled..."
-            exit 78
+            echo "is_version_increased=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_version_increased=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Test print
+        if: steps.compare_versions.outputs.is_version_increased == 'true' 
         run: |
           echo "Continuing with version: ${{ steps.set_variable.outputs.CURRENT_VERSION }}"
         
