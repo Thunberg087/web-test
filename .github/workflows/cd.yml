@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: check_version
-    if: needs.check_version.outputs.is_version_increased == 'true'
+    # if: needs.check_version.outputs.is_version_increased == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -89,16 +89,6 @@ jobs:
         run: |
           echo "awd: ${{ needs.check_version.outputs.is_version_increased }}"
 
-      - name: Create tag
-        uses: actions/github-script@v5
-        with:
-          script: |
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: 'refs/tags/${{ needs.check_version.outputs.version }}',
-              sha: context.sha
-            })
 
       - name: Create release
         env:
