@@ -140,6 +140,6 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add path/to/your/file.yaml
-          git commit -m "Update tag to ${{ github.sha }}"
+          git add ./app/envs/dev/version.yaml
+          git commit -m "Update dev version to ${{ needs.check_version.outputs.version }}"
           git push
