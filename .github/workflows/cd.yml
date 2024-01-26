@@ -84,7 +84,7 @@ jobs:
       matrix:
         include:
           - dockerfile: ./Dockerfile
-            image: thunberg087/web-test
+            image: thunberg087/web-test:${{ needs.check_version.outputs.version }}
     permissions:
       contents: write
       packages: write
@@ -120,5 +120,4 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile  }}
           push: true
-          tags: ${{ needs.check_version.outputs.version }}
           labels: ${{ steps.meta.outputs.labels }}
