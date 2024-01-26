@@ -15,12 +15,14 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   check_version:
-     # The type of runner that the job will run on
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
       packages: write
+    outputs:
+      is_version_increased: ${{ steps.compare_versions.outputs.is_version_increased }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -32,14 +34,13 @@ jobs:
       - name: get-npm-version
         id: package-version-prev
         uses: martinbeentjes/npm-get-version-action@v1.3.1
-        
+
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: get-npm-version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.3.1
-
 
       - name: Compare versions
         id: compare_versions
@@ -50,7 +51,6 @@ jobs:
           else
             echo "is_version_increased=true" >> "$GITHUB_OUTPUT"
           fi
-
 
   deploy:
     # The type of runner that the job will run on
@@ -70,15 +70,13 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-     
       # - name: Checkout
       #   uses: actions/checkout@v3
-
 
       - name: Test print
         run: |
           echo "awd: ${{ needs.check_version.outputs.is_version_increased }}"
-        
+
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v2
 
@@ -96,9 +94,7 @@ jobs:
       #   uses: docker/metadata-action@v4
       #   with:
       #     images: ${{ matrix.image }}
-          
 
-        
       # - name: Build and push
       #   uses: docker/build-push-action@v3
       #   with:
