@@ -16,7 +16,7 @@ jobs:
       packages: write
     outputs:
       is_version_increased: ${{ steps.compare_versions.outputs.is_version_increased }}
-      version: ${{ steps.package-version.outputs.version }}
+      version: ${{ steps.package-version.outputs.current-version }}
 
     steps:
       - name: Checkout
@@ -27,19 +27,19 @@ jobs:
 
       - name: get-npm-version
         id: package-version-prev
-        uses: beaconbrigade/package-json-version@v0.3
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
 
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: get-npm-version
         id: package-version
-        uses: beaconbrigade/package-json-version@v0.3
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
 
       - name: Compare versions
         id: compare_versions
         run: |
-          if [ "${{ steps.package-version-prev.outputs.version }}" == "${{ steps.package-version.outputs.version }}" ]; then
+          if [ "${{ steps.package-version-prev.outputs.current-version }}" == "${{ steps.package-version.outputs.current-version }}" ]; then
             echo "No new version, action cancelled..."
             echo "is_version_increased=false" >> "$GITHUB_OUTPUT"
           else
