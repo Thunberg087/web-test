@@ -77,7 +77,7 @@ jobs:
 
       - name: Test print
         run: |
-          echo "awd: ${{ jobs.check_version.outputs.is_version_increased }}"
+          echo "awd: ${{ needs.check_version.outputs.is_version_increased }}"
         
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v2
