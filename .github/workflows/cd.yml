@@ -15,8 +15,7 @@ jobs:
       contents: read
       packages: write
     outputs:
-      # is_version_increased: ${{ steps.compare_versions.outputs.is_version_increased }}
-      is_version_increased: 'true'
+      is_version_increased: ${{ steps.compare_versions.outputs.is_version_increased }}
       version: ${{ steps.package-version.outputs.version }}
 
     steps:
