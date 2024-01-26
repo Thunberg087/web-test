@@ -1,4 +1,3 @@
-
 name: Release Action
 
 on:
@@ -16,7 +15,8 @@ jobs:
       contents: read
       packages: write
     outputs:
-      is_version_increased: ${{ steps.compare_versions.outputs.is_version_increased }}
+      # is_version_increased: ${{ steps.compare_versions.outputs.is_version_increased }}
+      is_version_increased: 'true'
       version: ${{ steps.package-version.outputs.version }}
 
     steps:
@@ -25,7 +25,7 @@ jobs:
         with:
           fetch-depth: 2
       - run: git checkout HEAD^
-    
+
       - name: get-npm-version
         id: package-version-prev
         uses: beaconbrigade/package-json-version@v0.3
@@ -47,8 +47,6 @@ jobs:
             echo "is_version_increased=true" >> "$GITHUB_OUTPUT"
           fi
 
-
-
   create_release:
     name: Create release
     runs-on: ubuntu-latest
@@ -69,8 +67,6 @@ jobs:
               --repo="$GITHUB_REPOSITORY" \
               --title="🏷️ Version ${tag#v}" \
               --generate-notes
-              
-
 
   deploy:
     name: Deploy
@@ -91,7 +87,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-              
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -118,3 +114,32 @@ jobs:
           push: true
           tags: ${{ matrix.image }}:${{ needs.check_version.outputs.version }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  bump_dev_version:
+    name: Bump dev version
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: deploy
+    if: needs.check_version.outputs.is_version_increased == 'true'
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          repository: 'https://github.com/Thunberg087/web-test-config'
+
+      - name: Run script to update tag
+        run: |
+          chmod +x update_tag.sh
+          ./update_tag.sh ${{ needs.check_version.outputs.version }}
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add path/to/your/file.yaml
+          git commit -m "Update tag to ${{ github.sha }}"
+          git push
