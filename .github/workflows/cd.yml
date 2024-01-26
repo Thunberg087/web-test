@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: check_version
-    # if: jobs.check_version.outputs.is_version_increased == 'true'
+    if: needs.check_version.outputs.is_version_increased == 'true'
     strategy:
       fail-fast: false
       matrix:
