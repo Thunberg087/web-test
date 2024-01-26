@@ -92,6 +92,7 @@ jobs:
 
       - name: Create release
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ needs.check_version.outputs.version }}
         run: |
           gh release create "$tag" \
