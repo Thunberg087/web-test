@@ -2,7 +2,7 @@ import express from 'express'
 import { version } from './package.json'
 
 const app = express()
-const port = 3000
+const port = 80
 
 app.get('/', (req, res) => {
   
