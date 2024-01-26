@@ -32,14 +32,40 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
 
       - name: get-npm-version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.3.1
         
-      - name: Set version var
+      - name: Set prev version var
         id: set_variable
-        run: echo "VERSION="${{ steps.package-version.outputs.current-version}} >> $GITHUB_ENV
+        run: echo "PREV_VERSION="${{ steps.package-version.outputs.current-version}} >> $GITHUB_ENV
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: get-npm-version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+        
+      - name: Set current version var
+        id: set_variable
+        run: echo "CURRENT_VERSION="${{ steps.package-version.outputs.current-version}} >> $GITHUB_ENV
+
+      - name: Compare versions
+        id: compare_versions
+        run: |
+          if [ "${{ steps.set_variable.outputs.PREV_VERSION }}" == "${{ steps.set_variable.outputs.CURRENT_VERSION }}" ]; then
+            echo "No new version, action cancelled..."
+            exit 1
+          fi
+
+      - name: Test print
+        run: |
+          echo "Continuing with version: ${{ steps.set_variable.outputs.CURRENT_VERSION }}"
+        
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v2
 
