@@ -11,11 +11,8 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   check_version:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -25,7 +22,6 @@ jobs:
       is_version_increased: ${{ steps.compare_versions.outputs.is_version_increased }}
       version: ${{ steps.package-version.outputs.version }}
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -64,6 +60,8 @@ jobs:
             echo "is_version_increased=true" >> "$GITHUB_OUTPUT"
           fi
 
+
+
   create_release:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -85,12 +83,12 @@ jobs:
               --generate-notes
               
 
+
   deploy:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: check_version
-    # if: needs.check_version.outputs.is_version_increased == 'true'
+    if: needs.check_version.outputs.is_version_increased == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -101,7 +99,6 @@ jobs:
       contents: write
       packages: write
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
         uses: actions/checkout@v3
