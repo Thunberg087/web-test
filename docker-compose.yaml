@@ -1,0 +1,7 @@
+version: '3.7'
+
+services: 
+  web:
+    image: thunberg087/web-test:1.0.1
+    build: 
+      context: .
