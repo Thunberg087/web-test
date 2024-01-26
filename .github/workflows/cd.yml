@@ -52,7 +52,7 @@ jobs:
         run: |
           if [ "${{ steps.package-version-prev.outputs.current-version}}" == "${{ steps.package-version.outputs.current-version}}" ]; then
             echo "No new version, action cancelled..."
-            exit 0
+            exit 78
           fi
 
       - name: Test print
