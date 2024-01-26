@@ -129,7 +129,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          repository: 'https://github.com/Thunberg087/web-test-config'
+          repository: 'Thunberg087/web-test-config'
 
       - name: Run script to update tag
         run: |
