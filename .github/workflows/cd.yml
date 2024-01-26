@@ -14,16 +14,10 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  deploy:
-    # The type of runner that the job will run on
+  check_version:
+     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - dockerfile: ./Dockerfile
-            image: thunberg087/web-test
     permissions:
       contents: read
       packages: write
@@ -57,10 +51,33 @@ jobs:
             echo "is_version_increased=true" >> "$GITHUB_OUTPUT"
           fi
 
+
+  deploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: check_version
+    # if: jobs.check_version.outputs.is_version_increased == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./Dockerfile
+            image: thunberg087/web-test
+    permissions:
+      contents: read
+      packages: write
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+     
+      # - name: Checkout
+      #   uses: actions/checkout@v3
+
+
       - name: Test print
-        if: steps.compare_versions.outputs.is_version_increased == 'true' 
         run: |
-          echo "Continuing with version: ${{ steps.set_variable.outputs.CURRENT_VERSION }}"
+          echo "awd: ${{ jobs.check_version.outputs.is_version_increased }}"
         
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v2
