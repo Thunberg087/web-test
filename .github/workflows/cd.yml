@@ -119,7 +119,7 @@ jobs:
     name: Bump dev version
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: create_release
+    needs: deploy
     if: needs.check_version.outputs.is_version_increased == 'true'
     permissions:
       contents: write
