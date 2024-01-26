@@ -64,6 +64,27 @@ jobs:
             echo "is_version_increased=true" >> "$GITHUB_OUTPUT"
           fi
 
+  create_release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: check_version
+    if: needs.check_version.outputs.is_version_increased == 'true'
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          tag: ${{ needs.check_version.outputs.version }}
+        run: |
+          gh release create "$tag" \
+              --repo="$GITHUB_REPOSITORY" \
+              --title="🏷️ Version ${tag#v}" \
+              --generate-notes
+              
+
   deploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -82,47 +103,32 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # - name: Checkout
-      #   uses: actions/checkout@v3
-
-      - name: Test print
-        run: |
-          echo "awd: ${{ needs.check_version.outputs.is_version_increased }}"
-
-
-      - name: Create release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          tag: ${{ needs.check_version.outputs.version }}
-        run: |
-          gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="🏷️ Version ${tag#v}" \
-              --generate-notes
+      - name: Checkout
+        uses: actions/checkout@v3
               
-      # - name: Set up QEMU
-      #   uses: docker/setup-qemu-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      # - name: Login to Parametric Container Registry
-      #   uses: docker/login-action@v2
-      #   with:
-      #     username: ${{ secrets.REGISTRY_USER }}
-      #     password: ${{ secrets.REGISTRY_PASS }}
+      - name: Login to Parametric Container Registry
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASS }}
 
-      # - name: Docker meta
-      #   id: meta
-      #   uses: docker/metadata-action@v4
-      #   with:
-      #     images: ${{ matrix.image }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ matrix.image }}
 
-      # - name: Build and push
-      #   uses: docker/build-push-action@v3
-      #   with:
-      #     context: .
-      #     file: ${{ matrix.dockerfile  }}
-      #     push: true
-      #     tags: ${{ steps.meta.outputs.tags }} ${{ steps.package-version.outputs.current-version}}
-      #     labels: ${{ steps.meta.outputs.labels }}
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ${{ matrix.dockerfile  }}
+          push: true
+          tags: ${{ needs.check_version.outputs.version }} 
+          labels: ${{ steps.meta.outputs.labels }}
