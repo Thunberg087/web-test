@@ -98,7 +98,7 @@ jobs:
     name: Create release
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: deploy
+    needs: [check_version, deploy]
     if: needs.check_version.outputs.is_version_increased == 'true'
     permissions:
       contents: write
@@ -119,7 +119,7 @@ jobs:
     name: Bump dev version
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: deploy
+    needs: [check_version, deploy, create_release]
     if: needs.check_version.outputs.is_version_increased == 'true'
     permissions:
       contents: write
