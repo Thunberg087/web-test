@@ -46,100 +46,129 @@ jobs:
             echo "is_version_increased=true" >> "$GITHUB_OUTPUT"
           fi
 
-  deploy:
-    name: Deploy
+  check_if_release_exists:
+    name: Check if release exists
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: check_version
-    if: needs.check_version.outputs.is_version_increased == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - dockerfile: ./Dockerfile
-            image: thunberg087/web-test
+    # needs: check_version
+    # if: needs.check_version.outputs.is_version_increased == 'true'
     permissions:
-      contents: write
+      contents: read
       packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Thun Container Registry
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASS }}
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ matrix.image }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ matrix.dockerfile  }}
-          push: true
-          tags: ${{ matrix.image }}:${{ needs.check_version.outputs.version }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-  create_release:
-    name: Create release
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [check_version, deploy]
-    if: needs.check_version.outputs.is_version_increased == 'true'
-    permissions:
-      contents: write
-      packages: write
-
-    steps:
-      - name: Create release
+      - name: Check if release exists
+        id: check_release
         env:
           GH_TOKEN: ${{ github.token }}
           tag: ${{ needs.check_version.outputs.version }}
         run: |
-          gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="🏷️ Version ${tag#v}" \
-              --generate-notes
+          if [ gh release view "$tag" == "release not found"* ]; then
+            echo "Release does not exist"
+            echo "release_exists=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Release exists"
+            echo "release_exists=true" >> "$GITHUB_OUTPUT"
+          fi
 
-  bump_dev_version:
-    name: Bump dev version
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [check_version, deploy, create_release]
-    if: needs.check_version.outputs.is_version_increased == 'true'
-    permissions:
-      contents: write
-      packages: write
+  # deploy:
+  #   name: Deploy
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   needs: check_version
+  #   if: needs.check_version.outputs.is_version_increased == 'true'
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - dockerfile: ./Dockerfile
+  #           image: thunberg087/web-test
+  #   permissions:
+  #     contents: write
+  #     packages: write
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          repository: 'Thunberg087/web-test-config'
-          token: ${{ secrets.WEB_TEST_WRITE }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Run script to update tag
-        run: |
-          chmod +x update_tag.sh
-          ./update_tag.sh ${{ needs.check_version.outputs.version }}
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v3
 
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add ./app/envs/dev/version.yaml
-          git commit -m "Update dev version to ${{ needs.check_version.outputs.version }}"
-          git push
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
+
+  #     - name: Login to Thun Container Registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.REGISTRY_USER }}
+  #         password: ${{ secrets.REGISTRY_PASS }}
+
+  #     - name: Docker meta
+  #       id: meta
+  #       uses: docker/metadata-action@v5
+  #       with:
+  #         images: ${{ matrix.image }}
+
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: .
+  #         file: ${{ matrix.dockerfile  }}
+  #         push: true
+  #         tags: ${{ matrix.image }}:${{ needs.check_version.outputs.version }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+
+  # create_release:
+  #   name: Create release
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   needs: [check_version, deploy]
+  #   if: needs.check_version.outputs.is_version_increased == 'true'
+  #   permissions:
+  #     contents: write
+  #     packages: write
+
+  #   steps:
+  #     - name: Create release
+  #       env:
+  #         GH_TOKEN: ${{ github.token }}
+  #         tag: ${{ needs.check_version.outputs.version }}
+  #       run: |
+  #         gh release create "$tag" \
+  #             --repo="$GITHUB_REPOSITORY" \
+  #             --title="🏷️ Version ${tag#v}" \
+  #             --generate-notes
+
+  # bump_dev_version:
+  #   name: Bump dev version
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   needs: [check_version, deploy, create_release]
+  #   if: needs.check_version.outputs.is_version_increased == 'true'
+  #   permissions:
+  #     contents: write
+  #     packages: write
+
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: 'Thunberg087/web-test-config'
+  #         token: ${{ secrets.WEB_TEST_WRITE }}
+
+  #     - name: Run script to update tag
+  #       run: |
+  #         chmod +x update_tag.sh
+  #         ./update_tag.sh ${{ needs.check_version.outputs.version }}
+
+  #     - name: Commit and push changes
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
+  #         git add ./app/envs/dev/version.yaml
+  #         git commit -m "Update dev version to ${{ needs.check_version.outputs.version }}"
+  #         git push
