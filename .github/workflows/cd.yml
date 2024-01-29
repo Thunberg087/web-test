@@ -67,7 +67,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           tag: ${{ needs.check_version.outputs.version }}
         run: |
-          if [ gh release view "$tag" == "release not found"* ]; then
+          if [ $(gh release view "$tag" 2>&1) == *"release not found"* ]; then
             echo "Release does not exist"
             echo "release_exists=false" >> "$GITHUB_OUTPUT"
           else
