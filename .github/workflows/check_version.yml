@@ -41,6 +41,7 @@ jobs:
           if [ "${{ steps.package-version-prev.outputs.current-version }}" == "${{ steps.package-version.outputs.current-version }}" ]; then
             echo "No new version, action cancelled..."
             echo "is_version_increased=false" >> "$GITHUB_OUTPUT"
+            exit 1
           else
             echo "is_version_increased=true" >> "$GITHUB_OUTPUT"
           fi
