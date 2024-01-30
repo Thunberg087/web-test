@@ -50,7 +50,7 @@ jobs:
     name: Check if release exists
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # needs: check_version
+    needs: check_version
     # if: needs.check_version.outputs.is_version_increased == 'true'
     permissions:
       contents: read
