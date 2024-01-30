@@ -2,7 +2,7 @@ name: Release Action
 
 on:
   push:
-    branches: [main, release/*]
+    branches: [main]
 
   workflow_dispatch:
 
