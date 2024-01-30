@@ -82,7 +82,7 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: check_if_release_exists
+    needs: [check_version, check_if_release_exists]
     if: needs.check_if_release_exists.outputs.release_exists == 'false'
     strategy:
       fail-fast: false
@@ -129,7 +129,7 @@ jobs:
     name: Create release
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [check_if_release_exists, deploy]
+    needs: [check_version, check_if_release_exists, deploy]
     if: needs.check_if_release_exists.outputs.release_exists == 'false'
     permissions:
       contents: write
@@ -150,7 +150,7 @@ jobs:
     name: Bump dev version
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [check_if_release_exists, deploy, create_release]
+    needs: [check_version, check_if_release_exists, deploy, create_release]
     if: needs.check_if_release_exists.outputs.release_exists == 'false'
     permissions:
       contents: write
