@@ -125,6 +125,41 @@ jobs:
           tags: ${{ matrix.image }}:${{ needs.check_version.outputs.version }}
           labels: ${{ steps.meta.outputs.labels }}
 
+
+  build-push-artifact:
+    env:
+      PROJECT_ID: gendes-api
+      REGION: europe-west1
+      GAR_LOCATION: europe-west1-docker.pkg.dev/gendes-api/docker-repo/
+    runs-on: ubuntu-latest
+    needs: [check_version, check_if_release_exists]
+    if: needs.check_if_release_exists.outputs.release_exists == 'false'
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+
+      - id: "auth"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.SERVICE_ACCOUNT_KEY }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v1"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
+
+      - name: "Docker auth"
+        run: |-
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build image
+        run: docker build . --file DOCKERFILE_LOCATION --tag ${{ env.GAR_LOCATION }}
+        working-directory: WORKING_DIRECTORY
+
+      - name: Push image
+        run: docker push ${{ env.GAR_LOCATION }}
+
   create_release:
     name: Create release
     runs-on: ubuntu-latest
