@@ -78,52 +78,52 @@ jobs:
             echo "release_exists=true" >> "$GITHUB_OUTPUT"
           fi
 
-  deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [check_version, check_if_release_exists]
-    if: needs.check_if_release_exists.outputs.release_exists == 'false'
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - dockerfile: ./Dockerfile
-            image: thunberg087/web-test
-    permissions:
-      contents: write
-      packages: write
+  # deploy:
+  #   name: Deploy
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   needs: [check_version, check_if_release_exists]
+  #   if: needs.check_if_release_exists.outputs.release_exists == 'false'
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - dockerfile: ./Dockerfile
+  #           image: thunberg087/web-test
+  #   permissions:
+  #     contents: write
+  #     packages: write
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
 
-      - name: Login to Thun Container Registry
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASS }}
+  #     - name: Login to Thun Container Registry
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.REGISTRY_USER }}
+  #         password: ${{ secrets.REGISTRY_PASS }}
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ matrix.image }}
+  #     - name: Docker meta
+  #       id: meta
+  #       uses: docker/metadata-action@v5
+  #       with:
+  #         images: ${{ matrix.image }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ${{ matrix.dockerfile  }}
-          push: true
-          tags: ${{ matrix.image }}:${{ needs.check_version.outputs.version }}
-          labels: ${{ steps.meta.outputs.labels }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: .
+  #         file: ${{ matrix.dockerfile  }}
+  #         push: true
+  #         tags: ${{ matrix.image }}:${{ needs.check_version.outputs.version }}
+  #         labels: ${{ steps.meta.outputs.labels }}
 
 
   build-push-artifact:
@@ -154,8 +154,7 @@ jobs:
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Build image
-        run: docker build . --file DOCKERFILE_LOCATION --tag ${{ env.GAR_LOCATION }}
-        working-directory: WORKING_DIRECTORY
+        run: docker build . --tag ${{ env.GAR_LOCATION }}:${{ needs.check_version.outputs.version }}
 
       - name: Push image
         run: docker push ${{ env.GAR_LOCATION }}
@@ -164,7 +163,7 @@ jobs:
     name: Create release
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [check_version, check_if_release_exists, deploy]
+    needs: [check_version, check_if_release_exists, build-push-artifact]
     if: needs.check_if_release_exists.outputs.release_exists == 'false'
     permissions:
       contents: write
@@ -185,7 +184,7 @@ jobs:
     name: Bump dev version
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [check_version, check_if_release_exists, deploy, create_release]
+    needs: [check_version, check_if_release_exists, build-push-artifact, create_release]
     if: needs.check_if_release_exists.outputs.release_exists == 'false'
     permissions:
       contents: write
