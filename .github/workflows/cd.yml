@@ -131,6 +131,12 @@ jobs:
       PROJECT_ID: gendes-api
       REGION: europe-west1
       GAR_LOCATION: europe-west1-docker.pkg.dev/gendes-api/docker-repo/
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./Dockerfile
+            image: thunberg087/web-test
     runs-on: ubuntu-latest
     needs: [check_version, check_if_release_exists]
     if: needs.check_if_release_exists.outputs.release_exists == 'false'
@@ -154,10 +160,10 @@ jobs:
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Build image
-        run: docker build . --tag ${{ env.GAR_LOCATION }}:${{ needs.check_version.outputs.version }}
+        run: docker build . --file ${{ matrix.dockerfile }} --tag ${{ env.GAR_LOCATION }}/${{ matrix.image }}:${{ needs.check_version.outputs.version }}
 
       - name: Push image
-        run: docker push ${{ env.GAR_LOCATION }}
+        run: docker push ${{ env.GAR_LOCATION }}/${{ matrix.image }}:${{ needs.check_version.outputs.version }}
 
   # create_release:
   #   name: Create release
