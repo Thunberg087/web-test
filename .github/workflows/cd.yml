@@ -159,53 +159,53 @@ jobs:
       - name: Push image
         run: docker push ${{ env.GAR_LOCATION }}
 
-  create_release:
-    name: Create release
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [check_version, check_if_release_exists, build-push-artifact]
-    if: needs.check_if_release_exists.outputs.release_exists == 'false'
-    permissions:
-      contents: write
-      packages: write
+  # create_release:
+  #   name: Create release
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   needs: [check_version, check_if_release_exists, build-push-artifact]
+  #   if: needs.check_if_release_exists.outputs.release_exists == 'false'
+  #   permissions:
+  #     contents: write
+  #     packages: write
 
-    steps:
-      - name: Create release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          tag: ${{ needs.check_version.outputs.version }}
-        run: |
-          gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
-              --title="🏷️ Version ${tag#v}" \
-              --generate-notes
+  #   steps:
+  #     - name: Create release
+  #       env:
+  #         GH_TOKEN: ${{ github.token }}
+  #         tag: ${{ needs.check_version.outputs.version }}
+  #       run: |
+  #         gh release create "$tag" \
+  #             --repo="$GITHUB_REPOSITORY" \
+  #             --title="🏷️ Version ${tag#v}" \
+  #             --generate-notes
 
-  bump_dev_version:
-    name: Bump dev version
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: [check_version, check_if_release_exists, build-push-artifact, create_release]
-    if: needs.check_if_release_exists.outputs.release_exists == 'false'
-    permissions:
-      contents: write
-      packages: write
+  # bump_dev_version:
+  #   name: Bump dev version
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   needs: [check_version, check_if_release_exists, build-push-artifact, create_release]
+  #   if: needs.check_if_release_exists.outputs.release_exists == 'false'
+  #   permissions:
+  #     contents: write
+  #     packages: write
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          repository: 'Thunberg087/web-test-config'
-          token: ${{ secrets.WEB_TEST_WRITE }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: 'Thunberg087/web-test-config'
+  #         token: ${{ secrets.WEB_TEST_WRITE }}
 
-      - name: Run script to update tag
-        run: |
-          chmod +x update_tag.sh
-          ./update_tag.sh ${{ needs.check_version.outputs.version }}
+  #     - name: Run script to update tag
+  #       run: |
+  #         chmod +x update_tag.sh
+  #         ./update_tag.sh ${{ needs.check_version.outputs.version }}
 
-      - name: Commit and push changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add ./app/envs/dev/version.yaml
-          git commit -m "Update dev version to ${{ needs.check_version.outputs.version }}"
-          git push
+  #     - name: Commit and push changes
+  #       run: |
+  #         git config --local user.email "action@github.com"
+  #         git config --local user.name "GitHub Action"
+  #         git add ./app/envs/dev/version.yaml
+  #         git commit -m "Update dev version to ${{ needs.check_version.outputs.version }}"
+  #         git push
