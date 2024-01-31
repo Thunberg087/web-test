@@ -160,7 +160,7 @@ jobs:
           gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
       - name: Build image
-        run: docker build . --file ${{ matrix.dockerfile }} --tag ${{ env.GAR_LOCATION }}/${{ matrix.image }}:${{ needs.check_version.outputs.version }}
+        run: docker build . --file ${{ matrix.dockerfile }} --tag ${{ env.GAR_LOCATION }}${{ matrix.image }}:${{ needs.check_version.outputs.version }}
 
       - name: Push image
         run: docker push ${{ env.GAR_LOCATION }}${{ matrix.image }}:${{ needs.check_version.outputs.version }}
